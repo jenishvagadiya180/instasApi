@@ -1,0 +1,612 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: myAssets Backend - Beta
+Transform: AWS::Serverless-2016-10-31
+
+Globals:
+  Function:
+    Runtime: nodejs14.x
+    MemorySize: 2048
+    Timeout: 120
+    Tracing: Active
+    Environment:
+      Variables:
+        ASSERT_ENDPOINT: https://a0s3cyk0yb.execute-api.us-east-1.amazonaws.com/dev/authenticate/loginCallback
+        SSO_LOGIN_URL: https://login.microsoftonline.com/ac1f7d2b-c741-43f6-9893-d39b22c46953/saml2
+        SSO_LOGOUT_URL: https://login.microsoftonline.com/ac1f7d2b-c741-43f6-9893-d39b22c46953/saml2
+        SHIPENGINE_API_KEY: U9eWEVDauCdrZhay8ENnA4oDw4eHC4zsLtbr7CtcjS8
+        SHIPENGINE_URL: https://api.shipengine.com/v1/
+        DB_USERNAME: myworkspot
+        DB_PASSWORD: g0t0w0rk5p0Tto5313CTy0uR5pAc3!
+        DB_DATABASE: MyWorkspot
+        DB_HOSTNAME: awscitpworkspot-d01.cluster-clom6lg25ujp.us-east-1.rds.amazonaws.com
+        SHIPENGINE_SERVICE_CODE: fedex_ground
+        SHIPENGINE_CARRIER_CODE: se-2098615
+        RETURN_SHIPENGINE_SERVICE_CODE: ups_ground
+        RETURN_CARRIER_CODE: se-2098614
+        SHIPENGINE_PACKAGE_LENGTH: 14
+        SHIPENGINE_PACKAGE_WIDTH: 11
+        SHIPENGINE_PACKAGE_HEIGHT: 4
+        SHIPENGINE_PACKAGE_WEIGHT: 5
+        SSO_ENTITY_ID: passport-saml-dev
+        TZ: America/New_York
+    VpcConfig:
+      SecurityGroupIds:
+        - sg-06abcc80a9e313896
+      SubnetIds:
+        - subnet-033060d325f6d0675
+        - subnet-0424fdec6feb6fc51
+        - subnet-0d0643af7bcf0e58d
+
+Resources:
+  MyApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Description: REST API - assets
+      EndpointConfiguration: Regional
+      OpenApiVersion: "2.0"
+      StageName: dev
+      GatewayResponses:
+        DEFAULT_4XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Headers: "'*'"
+              Access-Control-Allow-Origin: "'*'"
+          StatusCode: 401
+        DEFAULT_5XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Headers: "'*'"
+              Access-Control-Allow-Origin: "'*'"
+      Cors:
+        AllowHeaders: "'*'"
+        AllowOrigin: "'*'"
+        AllowMethods: "'*'"
+
+  GetAssetsDataInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetAssetsData
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi
+  InsertAssetsDataInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref InsertAssetsData
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi
+  EditAssetsDataInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref EditAssetsData
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi
+  GetEmployeeDataInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetEmployeeData
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi
+  GetindividualEmployeeDataInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetindividualEmployeeData
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi
+  InsertEmployDataInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref InsertEmployData
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi
+  GetInventoryDataByGroupInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetInventoryDataByGroup
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi
+  LoginInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref Login
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi
+  ForgotpasswordInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref Forgotpassword
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi
+  ChangePasswordInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ChangePassword
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi
+  UserSignUpInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref UserSignUp
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi
+  EditUserDataInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref EditUserData
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi
+  DeleteUserDataInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref DeleteUserData
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi
+  GetOrderDataInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetOrderData
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi
+
+  UpdateOrderStatusInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref UpdateOrderStatus
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi
+  GetTemplateDataInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetTemplateData
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi
+  DeleteTemplateDataInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref DeleteTemplateData
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi
+  GetTemplateByIDInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetTemplateByID
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi
+  CreateUpdateTemplatesDataInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref CreateUpdateTemplatesData
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi
+  EditOrderDataInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref EditOrderData
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi
+  GetOrderDataByIDInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetOrderDataByID
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi
+  DeleteOrderDataInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref DeleteOrderData
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi
+  GetOrderHistoryInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetOrderHistory
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+                Ref: MyApi
+  AddCommmentsByStatusInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref AddCommmentsByStatus
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+                Ref: MyApi
+  AddOrderCommentsInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref AddOrderComments
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+                Ref: MyApi
+  GetOrderCommentsInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetOrderComments
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+                Ref: MyApi
+  GetEmployeeOrderHistoryInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetEmployeeOrderHistory
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi
+  GetInventoryLaptopModelsInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetInventoryLaptopModels
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi      
+  GetAccessoriesDataInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetAccessoriesData
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi  
+  AddNewLaptopModelsDataInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref AddNewLaptopModelsData
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi                
+  GetOrderStatusDataInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetOrderStatusData
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi
+  GetLaptopGroupInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetLaptopGroup
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi            
+  GetLocationsDataInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetLocationsData
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi       
+  GetAccessoryTypeDataInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetAccessoryTypeData
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi            
+  ChangeAssetStatusInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ChangeAssetStatus
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi       
+  GetAssetProductInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetAssetProduct
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi      
+  GetDashboardOrderStatusInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetDashboardOrderStatus
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi      
+  GetInventoryDockStationInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetInventoryDockStation
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi          
+  GetOrderLineItemsInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetOrderLineItems
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi      
+  AssetAssociationInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref AssetAssociation
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi    
+  GetSettingDataInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetSettingData
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi   
+  UpdateSettingDataInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref UpdateSettingData
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi   
+  GetReminderTypeInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetReminderType
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RestAPIId}/*
+          - RestAPIId:
+              Ref: MyApi                                                         
+
+
+  libs:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: assets-lib
+      Description: Dependencies for the Assetapp
+      ContentUri: lib/.
+      CompatibleRuntimes:
+        - nodejs12.x
+
+  GetAssetsData:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Get User Profile Data.
+      Handler: functions/users/handler.getUserProfileData
+      Events:
+        GetAssetsDataApi:
+          Type: Api
+          Properties:
+            Path: /users/getUserProfileData
+            Method: POST
+            RestApiId: !Ref MyApi
+      Role: !GetAtt DefaultRole.Arn
+      Layers:
+        - !Ref libs
+
+  createUser:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Create User Data.
+      Handler: functions/users/handler.createUser
+      Events:
+        GetAssetsDataApi:
+          Type: Api
+          Properties:
+            Path: /users/createUser
+            Method: POST
+            RestApiId: !Ref MyApi
+      Role: !GetAtt DefaultRole.Arn
+      Layers:
+        - !Ref libs     
+
+  updateUser:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Update User Data.
+      Handler: functions/users/handler.updateUser
+      Events:
+        GetAssetsDataApi:
+          Type: Api
+          Properties:
+            Path: /users/updateUser
+            Method: POST
+            RestApiId: !Ref MyApi
+      Role: !GetAtt DefaultRole.Arn
+      Layers:
+        - !Ref libs  
+
+  createPost:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Create Instagram Post.
+      Handler: functions/post/handler.createPost
+      Events:
+        GetAssetsDataApi:
+          Type: Api
+          Properties:
+            Path: /post/createPost
+            Method: POST
+            RestApiId: !Ref MyApi
+      Role: !GetAtt DefaultRole.Arn
+      Layers:
+        - !Ref libs                
