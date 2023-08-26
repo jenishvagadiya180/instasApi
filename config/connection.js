@@ -1,10 +1,10 @@
 
-
+require('dotenv').config()
 const mongoose = require('mongoose');
 
 module.exports.dbConnect = async () => {
     try {
-        await mongoose.connect("mongodb+srv://jenishVagadiya:jenishVagadiya@cluster0.1e6dc4l.mongodb.net/instaData");
+        await mongoose.connect(process.env.MONGODB_CONNECTION_URL);
         console.log('connected Successfully');
     } catch (err) {
         console.log(err);
