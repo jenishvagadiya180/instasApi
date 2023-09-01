@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const { dbConnect } = require("../../config/connection");
 const { userModel } = require("../../models/userModel.js");
+const iconv = require('iconv-lite');
 
 module.exports.getUserProfileData = async (event, context, callback) => {
   context.callbackWaitsForEmptyEventLoop = false;
@@ -138,4 +139,44 @@ module.exports.updateUser = async (event, context, callback) => {
   }
   return response;
 };
+
+module.exports.editProfilePicture = async (event, context, callback) => {
+  context.callbackWaitsForEmptyEventLoop = false;
+  let response;
+  try {
+    console.log("inside editProfilePicture");
+    await dbConnect();
+
+    event.body = JSON.parse(event.body);
+
+    if (!event.body.userId) throw new Error("Please Enter userId");
+
+    const checkUser = await userModel.findById(
+      new mongoose.Types.ObjectId(event.body.userId)
+    );
+    console.log("checkUser :>> ", checkUser && JSON.stringify(checkUser));
+
+    if (!checkUser) throw new Error("User not Exists");
+
+   console.log('checkUser :>> ', checkUser);
+
+    response = {
+      body: JSON.stringify({
+        statusCode: 200,
+        message: "User updated Successfully",
+        // userId: event.body.userId,
+      }),
+    };
+  } catch (error) {
+    console.log("error.message :>> ", error.message);
+    response = {
+      body: JSON.stringify({
+        statusCode: 400,
+        message: error.message,
+      }),
+    };
+  }
+  return response;
+};
+
 

@@ -609,4 +609,20 @@ Resources:
             RestApiId: !Ref MyApi
       Role: !GetAtt DefaultRole.Arn
       Layers:
-        - !Ref libs                
+        - !Ref libs 
+
+  editProfilePicture:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Create Instagram Post.
+      Handler: functions/users/handler.editProfilePicture
+      Events:
+        GetAssetsDataApi:
+          Type: Api
+          Properties:
+            Path: /users/editProfilePicture
+            Method: POST
+            RestApiId: !Ref MyApi
+      Role: !GetAtt DefaultRole.Arn
+      Layers:
+        - !Ref libs                       
