@@ -621,7 +621,7 @@ Resources:
           Type: Api
           Properties:
             Path: /users/editProfilePicture
-            Method: POST
+            Method: PUT
             RestApiId: !Ref MyApi
       Role: !GetAtt DefaultRole.Arn
       Layers:

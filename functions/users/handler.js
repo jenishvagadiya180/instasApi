@@ -1,7 +1,17 @@
 const mongoose = require("mongoose");
 const { dbConnect } = require("../../config/connection");
 const { userModel } = require("../../models/userModel.js");
-const iconv = require('iconv-lite');
+const AWS = require('aws-sdk');
+const s3 = new AWS.S3({
+  accessKeyId: 'AKIA6GEITEFVIYVY2R4I',
+  secretAccessKey: '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',
+});
+const parser = require('lambda-multipart-parser');
+
+// AWS.config.update({
+  
+//   region: 'us-east-1'
+// });
 
 module.exports.getUserProfileData = async (event, context, callback) => {
   context.callbackWaitsForEmptyEventLoop = false;
@@ -144,29 +154,47 @@ module.exports.editProfilePicture = async (event, context, callback) => {
   context.callbackWaitsForEmptyEventLoop = false;
   let response;
   try {
+    const result = await parser.parse(event);
     console.log("inside editProfilePicture");
+    console.log('result :>> ', JSON.stringify(result));
+    
     await dbConnect();
 
-    event.body = JSON.parse(event.body);
-
-    if (!event.body.userId) throw new Error("Please Enter userId");
+    console.log('result.userId :>> ', result.userId);
+    if (!result.userId) throw new Error("Please Enter userId");
 
     const checkUser = await userModel.findById(
-      new mongoose.Types.ObjectId(event.body.userId)
+      new mongoose.Types.ObjectId(result.userId)
     );
+    if (!checkUser) throw new Error("User not Exists");
     console.log("checkUser :>> ", checkUser && JSON.stringify(checkUser));
 
-    if (!checkUser) throw new Error("User not Exists");
+      const bucketName = 'instapostbucket'; //instapostbucket
+      const key = 'profilePicture/profilePic.jpg';
+      const body = event.body; 
 
-   console.log('checkUser :>> ', checkUser);
-
-    response = {
-      body: JSON.stringify({
-        statusCode: 200,
-        message: "User updated Successfully",
-        // userId: event.body.userId,
-      }),
+      const params = {
+        Bucket: bucketName,
+        Key: key,
+        Body: body,
+        ACL: 'public-read', // Set the ACL as per your requirements
+        ContentType: 'image/svg', // Set the content type according to your image type
     };
+
+    try {
+     const uploadImage =  await s3.putObject(params).promise();
+     console.log('uploadImage :>> ', uploadImage && JSON.stringify(uploadImage));
+      return {
+          statusCode: 200,
+          body: 'Image uploaded successfully',
+      };
+  } catch (error) {
+      console.error('Error uploading image to S3:', error.message);
+      return {
+          statusCode: 500,
+          body: 'Error uploading image to S3',
+      };
+  }
   } catch (error) {
     console.log("error.message :>> ", error.message);
     response = {
